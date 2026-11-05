@@ -1,0 +1,17 @@
+{
+  "type": "FeatureCollection",
+  "name": "stations",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+    { "type": "Feature", "properties": { "id": 1,  "name": "CTI Canteen",              "icon": "🍽️", "clue": "Start here! Grab a bite where the CTI students eat." },                       "geometry": { "type": "Point", "coordinates": [124.83586, 7.11427] } },
+    { "type": "Feature", "properties": { "id": 2,  "name": "ICT Building",             "icon": "💻", "clue": "Where the computers live. Look for the lounge chairs out front." },           "geometry": { "type": "Point", "coordinates": [124.83711, 7.11389] } },
+    { "type": "Feature", "properties": { "id": 3,  "name": "Library",                  "icon": "📚", "clue": "Shhh... the house of books." },                                               "geometry": { "type": "Point", "coordinates": [124.83787, 7.11459] } },
+    { "type": "Feature", "properties": { "id": 4,  "name": "CEIT Canteen",             "icon": "🥤", "clue": "Refuel at the engineers' canteen." },                                         "geometry": { "type": "Point", "coordinates": [124.83749, 7.11497] } },
+    { "type": "Feature", "properties": { "id": 5,  "name": "Playground (near CEIT Canteen)", "icon": "🛝", "clue": "Swings and slides just north of the canteen." },                         "geometry": { "type": "Point", "coordinates": [124.83724, 7.11549] } },
+    { "type": "Feature", "properties": { "id": 6,  "name": "CEIT Court",               "icon": "🏀", "clue": "The court where CEIT gathers." },                                              "geometry": { "type": "Point", "coordinates": [124.83684, 7.11497] } },
+    { "type": "Feature", "properties": { "id": 7,  "name": "CEIT Lobby",               "icon": "🛋️", "clue": "Find the sofa inside the CEIT building." },                                   "geometry": { "type": "Point", "coordinates": [124.83667, 7.11473] } },
+    { "type": "Feature", "properties": { "id": 8,  "name": "CTI Building (in front of CEIT)", "icon": "🛠️", "clue": "Tools and hammers - the building facing CEIT." },                      "geometry": { "type": "Point", "coordinates": [124.83605, 7.11500] } },
+    { "type": "Feature", "properties": { "id": 9,  "name": "Guard House (FMD Building)", "icon": "💂", "clue": "Ask the guard by the bench near FMD." },                                     "geometry": { "type": "Point", "coordinates": [124.83575, 7.11557] } },
+    { "type": "Feature", "properties": { "id": 10, "name": "DOST Laboratory (near CEIT)", "icon": "🔬", "clue": "Finish line! The lab building beside the parking area." },                  "geometry": { "type": "Point", "coordinates": [124.83667, 7.11557] } }
+  ]
+}

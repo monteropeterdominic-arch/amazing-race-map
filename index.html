@@ -76,6 +76,7 @@
   <div id="list"></div>
   <div class="tools">
     <button id="fit">🗺 Show all</button>
+    <button id="base">🛰 Esri imagery</button>
     <button id="reset">↺ Reset progress</button>
     <button id="edit">✏️ Edit positions</button>
   </div>
@@ -95,7 +96,7 @@ let stations = [], markers = {}, done = new Set(store.get(LS_DONE, [])), editing
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/satellite-streets-v12',
-  center: [124.8368, 7.1149], zoom: 17.3, bearing: 0
+  center: [124.8293, 7.1200], zoom: 17.5, bearing: 0
 });
 map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
 const geo = new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true });
@@ -230,6 +231,11 @@ function setEditing(v){
 
 document.getElementById('grab').onclick = () => minimise(!document.getElementById('sheet').classList.contains('min'));
 document.getElementById('fit').onclick = fitAll;
+document.getElementById('base').onclick = e => {
+  const on = map.getLayoutProperty('esri', 'visibility') !== 'visible';
+  map.setLayoutProperty('esri', 'visibility', on ? 'visible' : 'none');
+  e.target.textContent = on ? '🛰 Mapbox imagery' : '🛰 Esri imagery';
+};
 document.getElementById('reset').onclick = () => { if (confirm('Reset all progress?')) { done.clear(); store.set(LS_DONE, []); stations.forEach(s => markers[s.id].getPopup().setHTML(popupHTML(s))); buildList(); updateHeader(); } };
 document.getElementById('edit').onclick = () => setEditing(true);
 document.getElementById('exitEdit').onclick = () => setEditing(false);
@@ -250,6 +256,11 @@ map.on('load', async () => {
   map.addLayer({ id: 'route-arrows', type: 'symbol', source: 'route',
     layout: { 'symbol-placement': 'line', 'symbol-spacing': 70, 'text-field': '▶', 'text-size': 14, 'text-keep-upright': false, 'text-allow-overlap': true },
     paint: { 'text-color': '#f2a33a', 'text-halo-color': '#1d2327', 'text-halo-width': 1.2 } });
+  // backup satellite imagery (Esri World Imagery), shown under Mapbox labels
+  const firstSymbol = map.getStyle().layers.find(l => l.type === 'symbol')?.id;
+  map.addSource('esri', { type: 'raster', tileSize: 256, maxzoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
+    tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] });
+  map.addLayer({ id: 'esri', type: 'raster', source: 'esri', layout: { visibility: 'none' } }, firstSymbol);
   buildMarkers(); buildList(); updateHeader(); fitAll();
   if (editing) setEditing(true);
 });

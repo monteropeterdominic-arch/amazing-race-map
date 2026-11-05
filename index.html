@@ -76,6 +76,7 @@
   <div id="list"></div>
   <div class="tools">
     <button id="fit">🗺 Show all</button>
+    <button id="view3d">⬜ 2D view</button>
     <button id="base">🛰 Esri imagery</button>
     <button id="reset">↺ Reset progress</button>
     <button id="edit">✏️ Edit positions</button>
@@ -96,7 +97,7 @@ let stations = [], markers = {}, done = new Set(store.get(LS_DONE, [])), editing
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/satellite-streets-v12',
-  center: [124.8293, 7.1200], zoom: 17.5, bearing: 0
+  center: [124.8293, 7.1200], zoom: 17.5, pitch: 60, bearing: -20, antialias: true
 });
 map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
 const geo = new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true });
@@ -151,7 +152,7 @@ function updateHeader(){
 
 function popupHTML(s){
   const isDone = done.has(s.id);
-  return `<h3>${s.id}. ${s.icon} ${s.name}</h3><div style="font-size:13px;margin-bottom:8px">${s.clue || ''}</div>
+  return `<h3>${s.id}. ${s.icon} ${s.name}</h3>
     <button class="${isDone ? '' : 'ok'}" onclick="toggleDone(${s.id})">${isDone ? 'Undo' : '✔ Mark as found'}</button>`;
 }
 
@@ -181,7 +182,7 @@ function buildList(){
   stations.forEach(s => {
     const row = document.createElement('div');
     row.className = 'row' + (done.has(s.id) ? ' done' : '');
-    row.innerHTML = `<div class="num">${s.id}</div><div class="grow"><div class="nm">${s.icon} ${s.name}</div><div class="cl">${s.clue || ''}</div></div>`;
+    row.innerHTML = `<div class="num">${s.id}</div><div class="grow"><div class="nm">${s.icon} ${s.name}</div></div>`;
     const go = document.createElement('button'); go.className = 'go'; go.textContent = 'Go';
     go.onclick = () => { map.flyTo({ center: s.coord, zoom: 19 }); markers[s.id].togglePopup(); minimise(true); };
     row.appendChild(go);
@@ -214,12 +215,12 @@ window.toggleDone = id => {
 
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1600); }
 function minimise(v){ document.getElementById('sheet').classList.toggle('min', v); }
-function fitAll(){ const b = new mapboxgl.LngLatBounds(); stations.forEach(s => b.extend(s.coord)); map.fitBounds(b, { padding: { top: 120, bottom: 60, left: 40, right: 60 }, maxZoom: 18.5 }); }
+function fitAll(){ const b = new mapboxgl.LngLatBounds(); stations.forEach(s => b.extend(s.coord)); map.fitBounds(b, { padding: { top: 120, bottom: 60, left: 40, right: 60 }, maxZoom: 18.5, pitch: map.getPitch(), bearing: map.getBearing() }); }
 
 function exportGeoJSON(){
   return JSON.stringify({ type: 'FeatureCollection', name: 'stations',
     crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' } },
-    features: stations.map(s => ({ type: 'Feature', properties: { id: s.id, name: s.name, icon: s.icon, clue: s.clue },
+    features: stations.map(s => ({ type: 'Feature', properties: { id: s.id, name: s.name, icon: s.icon },
       geometry: { type: 'Point', coordinates: s.coord } })) }, null, 2);
 }
 
@@ -231,6 +232,12 @@ function setEditing(v){
 
 document.getElementById('grab').onclick = () => minimise(!document.getElementById('sheet').classList.contains('min'));
 document.getElementById('fit').onclick = fitAll;
+document.getElementById('view3d').onclick = e => {
+  const to3d = map.getPitch() < 10;
+  map.easeTo({ pitch: to3d ? 60 : 0, bearing: to3d ? -20 : 0, duration: 800 });
+  map.setLayoutProperty('3d-buildings', 'visibility', to3d ? 'visible' : 'none');
+  e.target.textContent = to3d ? '⬜ 2D view' : '🧊 3D view';
+};
 document.getElementById('base').onclick = e => {
   const on = map.getLayoutProperty('esri', 'visibility') !== 'visible';
   map.setLayoutProperty('esri', 'visibility', on ? 'visible' : 'none');
@@ -261,6 +268,13 @@ map.on('load', async () => {
   map.addSource('esri', { type: 'raster', tileSize: 256, maxzoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
     tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] });
   map.addLayer({ id: 'esri', type: 'raster', source: 'esri', layout: { visibility: 'none' } }, firstSymbol);
+  // 3D: terrain + extruded buildings
+  map.addSource('dem', { type: 'raster-dem', url: 'mapbox://mapbox.mapbox-terrain-dem-v1', tileSize: 512, maxzoom: 14 });
+  map.setTerrain({ source: 'dem', exaggeration: 1.2 });
+  map.addLayer({ id: '3d-buildings', source: 'composite', 'source-layer': 'building', type: 'fill-extrusion', minzoom: 14,
+    paint: { 'fill-extrusion-color': '#e9e2cf', 'fill-extrusion-opacity': 0.8,
+      'fill-extrusion-height': ['coalesce', ['get', 'height'], 8],
+      'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0] } }, firstSymbol);
   buildMarkers(); buildList(); updateHeader(); fitAll();
   if (editing) setEditing(true);
 });

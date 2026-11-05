@@ -77,7 +77,7 @@
   <div class="tools">
     <button id="fit">🗺 Show all</button>
     <button id="view3d">⬜ 2D view</button>
-    <button id="base">🛰 Esri imagery</button>
+    <button id="base">🛰 Mapbox imagery</button>
     <button id="reset">↺ Reset progress</button>
     <button id="edit">✏️ Edit positions</button>
   </div>
@@ -267,7 +267,7 @@ map.on('load', async () => {
   const firstSymbol = map.getStyle().layers.find(l => l.type === 'symbol')?.id;
   map.addSource('esri', { type: 'raster', tileSize: 256, maxzoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
     tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] });
-  map.addLayer({ id: 'esri', type: 'raster', source: 'esri', layout: { visibility: 'none' } }, firstSymbol);
+  map.addLayer({ id: 'esri', type: 'raster', source: 'esri', layout: { visibility: 'visible' } }, firstSymbol);
   // 3D: terrain + extruded buildings
   map.addSource('dem', { type: 'raster-dem', url: 'mapbox://mapbox.mapbox-terrain-dem-v1', tileSize: 512, maxzoom: 14 });
   map.setTerrain({ source: 'dem', exaggeration: 1.2 });
